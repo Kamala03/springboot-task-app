@@ -1,0 +1,599 @@
+openapi: 3.0.3
+info:
+  description: "API для управления банковскими картами, пользователями и аутентифи\
+    кацией"
+  title: Bank Card Management API
+  version: 1.0.0
+servers:
+- description: Локальный сервер
+  url: http://localhost:8080
+security:
+- bearerAuth: []
+paths:
+  /api/auth/sign-up:
+    post:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserDtoRequest'
+        required: true
+      responses:
+        "200":
+          description: Пользователь зарегистрирован
+      summary: Регистрация пользователя
+      x-content-type: application/json
+      x-accepts:
+      - application/json
+  /api/auth/sign-in:
+    post:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AuthRequest'
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+          description: Успешный вход
+      summary: Вход пользователя
+      x-content-type: application/json
+      x-accepts:
+      - application/json
+  /api/auth/verify-otp:
+    post:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OtpDto'
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+          description: OTP подтвержден
+      summary: Подтверждение OTP
+      x-content-type: application/json
+      x-accepts:
+      - application/json
+  /api/auth/forgot-password:
+    post:
+      parameters:
+      - explode: true
+        in: query
+        name: email
+        required: true
+        schema:
+          format: email
+          type: string
+        style: form
+      responses:
+        "200":
+          description: OTP отправлен на email
+      summary: Запрос на сброс пароля
+      x-accepts:
+      - application/json
+  /api/auth/reset-password:
+    post:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ResetPasswordDto'
+        required: true
+      responses:
+        "200":
+          description: Пароль изменен
+      security:
+      - bearerAuth: []
+      summary: Сброс пароля
+      x-content-type: application/json
+      x-accepts:
+      - application/json
+  /api/admin/cards/create-card/{id}:
+    post:
+      parameters:
+      - explode: false
+        in: path
+        name: id
+        required: true
+        schema:
+          type: integer
+        style: simple
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CardRequest'
+        required: true
+      responses:
+        "200":
+          description: Карта создана
+      security:
+      - bearerAuth: []
+      summary: Создать карту для пользователя
+      x-content-type: application/json
+      x-accepts:
+      - application/json
+  /api/admin/cards/block-card/{id}:
+    patch:
+      parameters:
+      - explode: false
+        in: path
+        name: id
+        required: true
+        schema:
+          type: integer
+        style: simple
+      responses:
+        "200":
+          description: Карта заблокирована
+      security:
+      - bearerAuth: []
+      summary: Заблокировать карту
+      x-accepts:
+      - application/json
+  /api/admin/cards/delete-card/{id}:
+    delete:
+      parameters:
+      - explode: false
+        in: path
+        name: id
+        required: true
+        schema:
+          type: integer
+        style: simple
+      responses:
+        "200":
+          description: Карта удалена
+      security:
+      - bearerAuth: []
+      summary: Удалить карту
+      x-accepts:
+      - application/json
+  /api/admin/cards/cards:
+    get:
+      parameters:
+      - explode: true
+        in: query
+        name: page
+        required: false
+        schema:
+          default: 1
+          type: integer
+        style: form
+      - explode: true
+        in: query
+        name: size
+        required: false
+        schema:
+          default: 10
+          type: integer
+        style: form
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/CardResponse'
+                type: array
+          description: Список карт
+      security:
+      - bearerAuth: []
+      summary: Получить все карты (пагинация)
+      x-accepts:
+      - application/json
+  /api/admin/users/create:
+    post:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserDtoRequest'
+        required: true
+      responses:
+        "200":
+          description: Админ создан
+      security:
+      - bearerAuth: []
+      summary: Создать администратора
+      x-content-type: application/json
+      x-accepts:
+      - application/json
+  /api/admin/users/{id}/block:
+    put:
+      parameters:
+      - explode: false
+        in: path
+        name: id
+        required: true
+        schema:
+          type: integer
+        style: simple
+      responses:
+        "200":
+          description: Пользователь заблокирован
+      security:
+      - bearerAuth: []
+      summary: Заблокировать пользователя
+      x-accepts:
+      - application/json
+  /api/admin/users/{id}/activate:
+    put:
+      parameters:
+      - explode: false
+        in: path
+        name: id
+        required: true
+        schema:
+          type: integer
+        style: simple
+      responses:
+        "200":
+          description: Пользователь активирован
+      security:
+      - bearerAuth: []
+      summary: Активировать пользователя
+      x-accepts:
+      - application/json
+  /api/admin/users/{id}:
+    delete:
+      parameters:
+      - explode: false
+        in: path
+        name: id
+        required: true
+        schema:
+          type: integer
+        style: simple
+      responses:
+        "200":
+          description: Пользователь удален
+      security:
+      - bearerAuth: []
+      summary: Удалить пользователя
+      x-accepts:
+      - application/json
+  /api/admin/users:
+    get:
+      parameters:
+      - explode: true
+        in: query
+        name: page
+        required: false
+        schema:
+          default: 0
+          type: integer
+        style: form
+      - explode: true
+        in: query
+        name: size
+        required: false
+        schema:
+          default: 10
+          type: integer
+        style: form
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/UserDtoResponse'
+                type: array
+          description: Список пользователей
+      security:
+      - bearerAuth: []
+      summary: Получить всех пользователей (пагинация)
+      x-accepts:
+      - application/json
+  /api/user:
+    get:
+      parameters:
+      - explode: true
+        in: query
+        name: page
+        required: false
+        schema:
+          default: 0
+          type: integer
+        style: form
+      - explode: true
+        in: query
+        name: size
+        required: false
+        schema:
+          default: 10
+          type: integer
+        style: form
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/CardResponse'
+                type: array
+          description: Список карт
+      security:
+      - bearerAuth: []
+      summary: Получить карты пользователя (USER)
+      x-accepts:
+      - application/json
+  /api/user/{cardNumber}/balance:
+    get:
+      parameters:
+      - explode: false
+        in: path
+        name: cardNumber
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                format: double
+                type: number
+          description: Баланс карты
+      security:
+      - bearerAuth: []
+      summary: Баланс карты
+      x-accepts:
+      - application/json
+  /api/user/transfer:
+    post:
+      parameters:
+      - explode: true
+        in: query
+        name: cardNumberFrom
+        required: true
+        schema:
+          type: string
+        style: form
+      - explode: true
+        in: query
+        name: cardNumberTo
+        required: true
+        schema:
+          type: string
+        style: form
+      - explode: true
+        in: query
+        name: amount
+        required: true
+        schema:
+          format: double
+          type: number
+        style: form
+      responses:
+        "200":
+          description: Перевод выполнен
+      security:
+      - bearerAuth: []
+      summary: Перевод между своими картами
+      x-accepts:
+      - application/json
+  /api/user/{cardNumber}/block:
+    post:
+      parameters:
+      - explode: false
+        in: path
+        name: cardNumber
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          description: Запрос на блокировку отправлен
+      security:
+      - bearerAuth: []
+      summary: Запрос на блокировку карты
+      x-accepts:
+      - application/json
+components:
+  schemas:
+    AuthRequest:
+      example:
+        password: password123
+        email: user@example.com
+      properties:
+        email:
+          example: user@example.com
+          format: email
+          type: string
+        password:
+          example: password123
+          minLength: 6
+          type: string
+      required:
+      - email
+      - password
+      type: object
+    AuthResponse:
+      example:
+        token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+      properties:
+        token:
+          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+          type: string
+      type: object
+    CardRequest:
+      example:
+        balance: 1000.5
+        cardNumber: "1234567812345678"
+      properties:
+        cardNumber:
+          example: "1234567812345678"
+          pattern: "^[0-9]{16}$"
+          type: string
+        balance:
+          example: 1000.5
+          format: double
+          minimum: 0
+          type: number
+      required:
+      - balance
+      - cardNumber
+      type: object
+    CardResponse:
+      example:
+        balance: 1000.5
+        id: 1
+        user:
+          userStatus: ACTIVE
+          email: user@example.com
+          username: ivan123
+        cardNumber: '**** **** **** 1234'
+        cardStatus: ACTIVE
+        expirationDate: 2026-12-31
+      properties:
+        id:
+          example: 1
+          type: integer
+        cardNumber:
+          example: '**** **** **** 1234'
+          type: string
+        expirationDate:
+          example: 2026-12-31
+          format: date
+          type: string
+        cardStatus:
+          enum:
+          - ACTIVE
+          - BLOCKED
+          - EXPIRED
+          example: ACTIVE
+          type: string
+        balance:
+          example: 1000.5
+          format: double
+          type: number
+        user:
+          $ref: '#/components/schemas/UserDtoResponse'
+      type: object
+    UserDtoRequest:
+      example:
+        password: password123
+        confirmPassword: password123
+        email: user@example.com
+        username: ivan123
+      properties:
+        username:
+          example: ivan123
+          maxLength: 20
+          minLength: 3
+          type: string
+        password:
+          example: password123
+          minLength: 6
+          type: string
+        confirmPassword:
+          example: password123
+          minLength: 6
+          type: string
+        email:
+          example: user@example.com
+          format: email
+          type: string
+      required:
+      - confirmPassword
+      - email
+      - password
+      - username
+      type: object
+    UserDtoResponse:
+      example:
+        userStatus: ACTIVE
+        email: user@example.com
+        username: ivan123
+      properties:
+        username:
+          example: ivan123
+          type: string
+        email:
+          example: user@example.com
+          format: email
+          type: string
+        userStatus:
+          enum:
+          - ACTIVE
+          - BLOCKED
+          example: ACTIVE
+          type: string
+      type: object
+    OtpDto:
+      example:
+        code: "123456"
+        email: user@example.com
+      properties:
+        code:
+          example: "123456"
+          pattern: "^[0-9]{6}$"
+          type: string
+        email:
+          example: user@example.com
+          format: email
+          type: string
+      required:
+      - code
+      - email
+      type: object
+    ResetPasswordDto:
+      example:
+        confirmNewPassword: newPass123
+        oldPassword: oldPass123
+        newPassword: newPass123
+      properties:
+        oldPassword:
+          example: oldPass123
+          type: string
+        newPassword:
+          example: newPass123
+          minLength: 6
+          type: string
+        confirmNewPassword:
+          example: newPass123
+          minLength: 6
+          type: string
+      required:
+      - confirmNewPassword
+      - newPassword
+      - oldPassword
+      type: object
+    ForgotPasswordDto:
+      properties:
+        email:
+          example: user@example.com
+          format: email
+          type: string
+        password:
+          example: newPass123
+          minLength: 6
+          type: string
+        confirmPassword:
+          example: newPass123
+          minLength: 6
+          type: string
+      required:
+      - confirmPassword
+      - email
+      - password
+      type: object
+  securitySchemes:
+    bearerAuth:
+      bearerFormat: JWT
+      scheme: bearer
+      type: http
+

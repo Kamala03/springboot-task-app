@@ -1,0 +1,504 @@
+openapi: 3.0.3
+info:
+  title: Bank Card Management API
+  version: 1.0.0
+  description: API для управления банковскими картами, пользователями и аутентификацией
+servers:
+  - url: http://localhost:8080
+    description: Локальный сервер
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    AuthRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+          example: "user@example.com"
+        password:
+          type: string
+          minLength: 6
+          example: "password123"
+      required:
+        - email
+        - password
+
+    AuthResponse:
+      type: object
+      properties:
+        token:
+          type: string
+          example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+
+    CardRequest:
+      type: object
+      properties:
+        cardNumber:
+          type: string
+          pattern: "^[0-9]{16}$"
+          example: "1234567812345678"
+        balance:
+          type: number
+          format: double
+          minimum: 0
+          example: 1000.50
+      required:
+        - cardNumber
+        - balance
+
+    CardResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        cardNumber:
+          type: string
+          example: "**** **** **** 1234"
+        expirationDate:
+          type: string
+          format: date
+          example: "2026-12-31"
+        cardStatus:
+          type: string
+          enum: [ACTIVE, BLOCKED, EXPIRED]
+          example: ACTIVE
+        balance:
+          type: number
+          format: double
+          example: 1000.50
+        user:
+          $ref: '#/components/schemas/UserDtoResponse'
+
+    UserDtoRequest:
+      type: object
+      properties:
+        username:
+          type: string
+          minLength: 3
+          maxLength: 20
+          example: "ivan123"
+        password:
+          type: string
+          minLength: 6
+          example: "password123"
+        confirmPassword:
+          type: string
+          minLength: 6
+          example: "password123"
+        email:
+          type: string
+          format: email
+          example: "user@example.com"
+      required:
+        - username
+        - password
+        - confirmPassword
+        - email
+
+    UserDtoResponse:
+      type: object
+      properties:
+        username:
+          type: string
+          example: "ivan123"
+        email:
+          type: string
+          format: email
+          example: "user@example.com"
+        userStatus:
+          type: string
+          enum: [ACTIVE, BLOCKED]
+          example: ACTIVE
+
+    OtpDto:
+      type: object
+      properties:
+        code:
+          type: string
+          pattern: "^[0-9]{6}$"
+          example: "123456"
+        email:
+          type: string
+          format: email
+          example: "user@example.com"
+      required:
+        - code
+        - email
+
+    ResetPasswordDto:
+      type: object
+      properties:
+        oldPassword:
+          type: string
+          example: "oldPass123"
+        newPassword:
+          type: string
+          minLength: 6
+          example: "newPass123"
+        confirmNewPassword:
+          type: string
+          minLength: 6
+          example: "newPass123"
+      required:
+        - oldPassword
+        - newPassword
+        - confirmNewPassword
+
+    ForgotPasswordDto:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+          example: "user@example.com"
+        password:
+          type: string
+          minLength: 6
+          example: "newPass123"
+        confirmPassword:
+          type: string
+          minLength: 6
+          example: "newPass123"
+      required:
+        - email
+        - password
+        - confirmPassword
+
+security:
+  - bearerAuth: []
+
+paths:
+
+  /api/auth/sign-up:
+    post:
+      summary: Регистрация пользователя
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserDtoRequest'
+      responses:
+        '200':
+          description: Пользователь зарегистрирован
+
+  /api/auth/sign-in:
+    post:
+      summary: Вход пользователя
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AuthRequest'
+      responses:
+        '200':
+          description: Успешный вход
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+
+  /api/auth/verify-otp:
+    post:
+      summary: Подтверждение OTP
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OtpDto'
+      responses:
+        '200':
+          description: OTP подтвержден
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+
+  /api/auth/forgot-password:
+    post:
+      summary: Запрос на сброс пароля
+      parameters:
+        - name: email
+          in: query
+          required: true
+          schema:
+            type: string
+            format: email
+      responses:
+        '200':
+          description: OTP отправлен на email
+
+  /api/auth/reset-password:
+    post:
+      summary: Сброс пароля
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ResetPasswordDto'
+      responses:
+        '200':
+          description: Пароль изменен
+      security:
+        - bearerAuth: []
+
+  /api/admin/cards/create-card/{id}:
+    post:
+      summary: Создать карту для пользователя
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CardRequest'
+      responses:
+        '200':
+          description: Карта создана
+      security:
+        - bearerAuth: []
+
+  /api/admin/cards/block-card/{id}:
+    patch:
+      summary: Заблокировать карту
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Карта заблокирована
+      security:
+        - bearerAuth: []
+
+  /api/admin/cards/delete-card/{id}:
+    delete:
+      summary: Удалить карту
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Карта удалена
+      security:
+        - bearerAuth: []
+
+  /api/admin/cards/cards:
+    get:
+      summary: Получить все карты (пагинация)
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: size
+          in: query
+          schema:
+            type: integer
+            default: 10
+      responses:
+        '200':
+          description: Список карт
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CardResponse'
+      security:
+        - bearerAuth: []
+
+  /api/admin/users/create:
+    post:
+      summary: Создать администратора
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserDtoRequest'
+      responses:
+        '200':
+          description: Админ создан
+      security:
+        - bearerAuth: []
+
+  /api/admin/users/{id}/block:
+    put:
+      summary: Заблокировать пользователя
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Пользователь заблокирован
+      security:
+        - bearerAuth: []
+
+  /api/admin/users/{id}/activate:
+    put:
+      summary: Активировать пользователя
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Пользователь активирован
+      security:
+        - bearerAuth: []
+
+  /api/admin/users/{id}:
+    delete:
+      summary: Удалить пользователя
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Пользователь удален
+      security:
+        - bearerAuth: []
+
+  /api/admin/users:
+    get:
+      summary: Получить всех пользователей (пагинация)
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 0
+        - name: size
+          in: query
+          schema:
+            type: integer
+            default: 10
+      responses:
+        '200':
+          description: Список пользователей
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/UserDtoResponse'
+      security:
+        - bearerAuth: []
+
+  /api/user:
+    get:
+      summary: Получить карты пользователя (USER)
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 0
+        - name: size
+          in: query
+          schema:
+            type: integer
+            default: 10
+      responses:
+        '200':
+          description: Список карт
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CardResponse'
+      security:
+        - bearerAuth: []
+
+  /api/user/{cardNumber}/balance:
+    get:
+      summary: Баланс карты
+      parameters:
+        - in: path
+          name: cardNumber
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Баланс карты
+          content:
+            application/json:
+              schema:
+                type: number
+                format: double
+      security:
+        - bearerAuth: []
+
+  /api/user/transfer:
+    post:
+      summary: Перевод между своими картами
+      parameters:
+        - name: cardNumberFrom
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: cardNumberTo
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: amount
+          in: query
+          required: true
+          schema:
+            type: number
+            format: double
+      responses:
+        '200':
+          description: Перевод выполнен
+      security:
+        - bearerAuth: []
+
+  /api/user/{cardNumber}/block:
+    post:
+      summary: Запрос на блокировку карты
+      parameters:
+        - in: path
+          name: cardNumber
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Запрос на блокировку отправлен
+      security:
+        - bearerAuth: []

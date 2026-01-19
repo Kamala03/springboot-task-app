@@ -1,0 +1,13 @@
+databaseChangeLog:
+  - include:
+        file: liquibase/1.0/create_roles_table.yaml
+  - include:
+      file: liquibase/1.0/create_users_table.yaml
+  - include:
+      file: liquibase/1.0/create_cards_table.yaml
+  - include:
+      file: liquibase/1.0/create_otps_table.yaml
+  - include:
+      file: liquibase/1.0/create_reset_tokens_table.yaml
+  - include:
+      file: liquibase/1.0/create_blacklisted_tokens_table.yaml
