@@ -15,23 +15,22 @@ This is a Spring Boot application with PostgreSQL, fully containerized using Doc
 
 ## Setup & Run
 
-### 1 Clone the project
+### 1️⃣ Clone the project
 
 ```bash
 git clone https://github.com/Kamala03/springboot-task-app.git
 cd springboot-task-app
 
 
-### 2 Build the application
+### 2️⃣ Build the application
 ./gradlew clean build
 
 
-### 3 Build Docker images
+### 3️⃣ Build Docker images
 docker-compose build
 
 
-
-### 4 Run the application
+### 4️⃣ Run the application
 docker-compose up
 
 
