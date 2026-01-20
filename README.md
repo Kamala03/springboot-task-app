@@ -15,12 +15,12 @@ This is a Spring Boot application with PostgreSQL, fully containerized using Doc
 
 ## Setup & Run
 
-### 1️⃣ Clone the project
 
-```bash
+
+### 1️⃣ Clone project
+bash
 git clone https://github.com/Kamala03/springboot-task-app.git
 cd springboot-task-app
-
 
 ### 2️⃣ Build the application
 ./gradlew clean build
